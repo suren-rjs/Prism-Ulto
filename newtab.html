@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prism Ulto</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="fouc.js"></script>
+</head>
+<body>
+
+  <!-- Fullscreen Background Overlay -->
+  <div class="bg-overlay"></div>
+
+  <div class="dashboard">
+    
+    <!-- Top Left: Search -->
+    <div class="widget-area top-left">
+      <div class="search-trigger">
+        <div class="search-provider-selector" id="searchProviderBtn">
+          <img src="https://www.google.com/favicon.ico" id="currentProviderIcon" alt="G">
+          <div class="provider-dropdown glass" id="providerDropdown">
+            <div class="provider-option" data-provider="google" title="Google">
+              <img src="https://www.google.com/favicon.ico" alt="G">
+            </div>
+            <div class="provider-option" data-provider="bing" title="Bing">
+              <img src="https://www.bing.com/favicon.ico" alt="B">
+            </div>
+            <div class="provider-option" data-provider="duckduckgo" title="DuckDuckGo">
+              <img src="https://duckduckgo.com/favicon.ico" alt="D">
+            </div>
+          </div>
+        </div>
+        <input type="text" id="mainSearch" placeholder="Search Google..." autocomplete="off">
+        <div class="search-icons">
+          <kbd>/</kbd>
+          <span class="search-icon">🔍</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Right: Timer -->
+    <div class="widget-area top-right">
+      <div class="timer-minimal glass">
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="timer-modes">
+          <button id="timerStudyBtn" class="timer-mode-btn active">Study</button>
+          <button id="timerRestBtn" class="timer-mode-btn">Rest</button>
+        </div>
+        <div class="timer-controls">
+          <button id="timerToggleBtn" class="timer-icon-btn">▶</button>
+          <button id="timerResetBtn" class="timer-icon-btn">↺</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Clock & Main Focus -->
+    <main class="center-focus">
+      <div class="clock-wrap">
+        <h1 id="clockDisplay">00:00</h1>
+      </div>
+      
+      <div class="greeting-wrap">
+        <h2 id="greetingText">Good morning</h2>
+      </div>
+
+      <div class="focus-widget glass">
+        <p class="focus-label">What is your main focus for today?</p>
+        <div id="focusInputArea">
+            <input type="text" id="dailyFocusInput" placeholder="Enter focus..." autocomplete="off">
+        </div>
+        <div id="dailyFocusDisplay" style="display:none">
+            <span class="focus-text"></span>
+            <button id="clearFocusBtn">✕</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Left: Calendar -->
+    <div class="widget-area bottom-left">
+      <div class="widget-container glass" id="calendarWidget">
+        <div class="widget-header">
+          <h3>Calendar</h3>
+          <a href="https://calendar.google.com" target="_blank" class="header-shortcut" title="Open Calendar">↗</a>
+        </div>
+        <div id="calendarEvents" class="minimal-list">
+          <button id="connectGoogleBtn" class="btn-minimal">Connect Google</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Right: Google Tasks -->
+    <div class="widget-area bottom-right">
+      <div class="widget-container glass" id="tasksWidget">
+        <div class="widget-header">
+          <h3>Google Tasks</h3>
+          <a href="https://tasks.google.com" target="_blank" class="header-shortcut" title="Open Tasks">↗</a>
+        </div>
+        <div id="tasksList" class="minimal-list">
+          <p class="status-msg">Sign in to view tasks</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Dock -->
+  <div class="dock-wrapper">
+    <div class="dock glass">
+      <div id="quickLinksGrid" class="minimal-links grouped-links"></div>
+      <div class="dock-separator"></div>
+      <div class="floating-actions">
+        <button id="notesToggleBtn" class="icon-btn" title="Take Notes">📝</button>
+        <div class="profile-mini" id="userProfileBtn">
+          <div id="userAvatar" class="avatar-circle">?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes Panel -->
+  <div id="notesPanel" class="notes-panel glass">
+    <div class="panel-header">
+      <h3>Quick Notes</h3>
+      <button id="closeNotesBtn" class="icon-btn">✕</button>
+    </div>
+    <textarea id="notesArea" placeholder="Write something..."></textarea>
+  </div>
+
+  <footer class="footer-credit">
+    &copy; 2026 Surendiran. All rights reserved.
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

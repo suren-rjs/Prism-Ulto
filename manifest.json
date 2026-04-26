@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Prism Ulto",
+  "version": "1.0.0",
+  "description": "A unified minimalist focus dashboard to centralize your personal productivity on every new tab.",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "favicon.png",
+      "48": "favicon.png",
+      "128": "favicon.png"
+    }
+  },
+  "icons": {
+    "16": "favicon.png",
+    "48": "favicon.png",
+    "128": "favicon.png"
+  },
+  "permissions": [
+    "storage",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://www.googleapis.com/*"
+  ],
+  "oauth2": {
+    "client_id": "34935751673-ph2a8e6brue5qj1d3b65368lp5dip5ia.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/calendar.readonly",
+      "https://www.googleapis.com/auth/tasks.readonly"
+    ]
+  }
+}
