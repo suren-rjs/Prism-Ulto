@@ -8,6 +8,7 @@ import { Calendar } from './components/Calendar.js';
 import { DailyFocus } from './components/DailyFocus.js';
 import { QuickLinks } from './components/QuickLinks.js';
 import { Search } from './components/Search.js';
+import { Weather } from './components/Weather.js';
 
 class App {
   constructor() {
@@ -29,6 +30,7 @@ class App {
   initComponents() {
     // 1. Independent Components
     new Clock().init();
+    new Weather().init();
     new DailyFocus(this.stateManager).init();
     new QuickLinks(this.stateManager).init();
     new Search(this.stateManager).init();
@@ -36,11 +38,12 @@ class App {
     new StudyTimer(this.stateManager).init();
 
     // 2. Auth-Dependent Components
-    const tasks = new GoogleTasks();
-    const calendar = new Calendar(() => {
-        // Callback if identity is required but missing
-        // (Handled by AuthService.getAuthToken(true) via Identity component)
-    });
+    const onAuthRequired = () => {
+        identity.init(); // Re-trigger identity fetch which includes sign-in
+    };
+
+    const tasks = new GoogleTasks(onAuthRequired);
+    const calendar = new Calendar(onAuthRequired);
 
     const identity = new Identity(this.stateManager, (token) => {
       // Re-init auth components when token is fetched

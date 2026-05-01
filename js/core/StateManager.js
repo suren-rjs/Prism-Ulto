@@ -4,9 +4,9 @@ export class StateManager {
   constructor() {
     this.state = {
       user: { name: 'Friend', avatar: null },
-      settings: { theme: 'dark', searchProvider: 'google' },
+      settings: { theme: 'dark' },
       dailyFocus: '',
-      notes: '',
+      notes: [],
       timer: { mode: 'study', remaining: 1500, running: false, interval: null, targetTime: null },
       links: this.getDefaultLinks()
     };
@@ -14,6 +14,7 @@ export class StateManager {
 
   getDefaultLinks() {
     return [
+      { name: 'GitHub', url: 'https://github.com', icon: '🐙', category: 'Dev' },
       { name: 'Gmail', url: 'https://mail.google.com', icon: '📧', category: 'Google' },
       { name: 'NotebookLM', url: 'https://notebooklm.google.com', category: 'Google' },
       { name: 'Google Firebase', url: 'https://firebase.google.com', category: 'Google' },
@@ -35,8 +36,33 @@ export class StateManager {
     if (data.user) this.state.user = data.user;
     if (data.settings) this.state.settings = data.settings;
     if (data.dailyFocus) this.state.dailyFocus = data.dailyFocus;
-    if (data.notes) this.state.notes = data.notes;
-    if (data.links) this.state.links = data.links;
+    
+    // Migration for notes: string to array
+    if (data.notes) {
+      if (typeof data.notes === 'string' && data.notes.trim() !== '') {
+        this.state.notes = [{
+          id: Date.now(),
+          title: 'Imported Note',
+          content: data.notes,
+          updatedAt: Date.now()
+        }];
+        await this.save();
+      } else if (Array.isArray(data.notes)) {
+        this.state.notes = data.notes;
+      }
+    }
+
+    if (data.links) {
+      this.state.links = data.links;
+      // Migration: Ensure GitHub is in the dock for existing users
+      if (!this.state.links.some(link => link.name === 'GitHub' || link.url === 'https://github.com')) {
+        const githubLink = this.getDefaultLinks().find(l => l.url === 'https://github.com');
+        if (githubLink) {
+          this.state.links.unshift(githubLink);
+          this.save();
+        }
+      }
+    }
     if (data.timer) {
       this.state.timer = { 
         ...this.state.timer, 
@@ -82,3 +108,4 @@ export class StateManager {
     this.save();
   }
 }
+

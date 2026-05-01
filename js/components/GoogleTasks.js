@@ -1,15 +1,19 @@
 import { AuthService } from '../services/AuthService.js';
 
 export class GoogleTasks {
-  constructor() {
+  constructor(onIdentityRequired) {
     this.listEl = document.getElementById('tasksList');
+    this.onIdentityRequired = onIdentityRequired;
   }
 
   async init(passedToken) {
     const token = passedToken || await AuthService.getAuthToken(false);
     
     if (!token) {
-      this.listEl.innerHTML = '<p class="status-msg">Click avatar to connect</p>';
+      this.listEl.innerHTML = '<button id="connectTasksBtn" class="btn-minimal">Connect Google</button>';
+      document.getElementById('connectTasksBtn').onclick = () => {
+        if (this.onIdentityRequired) this.onIdentityRequired();
+      };
       return;
     }
 

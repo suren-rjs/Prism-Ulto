@@ -5,8 +5,10 @@ export class StudyTimer {
     this.display = document.getElementById('timerDisplay');
     this.toggleBtn = document.getElementById('timerToggleBtn');
     this.resetBtn = document.getElementById('timerResetBtn');
-    this.studyBtn = document.getElementById('timerStudyBtn');
     this.restBtn = document.getElementById('timerRestBtn');
+    this.durationBtns = document.querySelectorAll('.timer-duration-btn');
+    
+    this.channel = new BroadcastChannel('timer_sync');
   }
 
   init() {
@@ -15,28 +17,57 @@ export class StudyTimer {
     this.updateDisplay();
     
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && this.timer.running) {
+      if (!document.hidden) {
+        // Refresh state from storage when tab becomes visible
+        this.timer = this.stateManager.get('timer');
         this.updateDisplay();
+        if (this.timer.running && !this.timer.interval) {
+            this.start(true); // resume UI interval
+        }
       }
     });
+
+    this.channel.onmessage = (msg) => {
+      if (msg.data.type === 'SYNC') {
+        this.timer = msg.data.timer;
+        this.stateManager.state.timer = this.timer; // Update local state
+        this.updateDisplay();
+        this.handleSyncAction(msg.data.action);
+      }
+    };
   }
 
   setupListeners() {
-    this.toggleBtn.addEventListener('click', () => this.timer.running ? this.pause() : this.start());
-    this.resetBtn.addEventListener('click', () => this.reset());
+    this.toggleBtn.addEventListener('click', () => {
+        const action = this.timer.running ? 'pause' : 'start';
+        this.timer.running ? this.pause() : this.start();
+        this.broadcast('SYNC', action);
+    });
+
+    this.resetBtn.addEventListener('click', () => {
+        this.reset();
+        this.broadcast('SYNC', 'reset');
+    });
     
-    this.studyBtn.addEventListener('click', () => {
-      this.timer.mode = 'study';
-      this.studyBtn.classList.add('active');
-      this.restBtn.classList.remove('active');
-      this.reset();
+    this.durationBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mins = parseInt(btn.dataset.minutes);
+        this.timer.mode = 'study';
+        this.timer.remaining = mins * 60;
+        this.setActiveDuration(btn);
+        this.restBtn.classList.remove('active');
+        this.reset(true);
+        this.broadcast('SYNC', 'duration_change');
+      });
     });
 
     this.restBtn.addEventListener('click', () => {
       this.timer.mode = 'rest';
+      this.timer.remaining = 300; // 5 mins
       this.restBtn.classList.add('active');
-      this.studyBtn.classList.remove('active');
-      this.reset();
+      this.durationBtns.forEach(b => b.classList.remove('active'));
+      this.reset(true);
+      this.broadcast('SYNC', 'mode_change');
     });
   }
 
@@ -44,7 +75,7 @@ export class StudyTimer {
     if (this.timer.targetTime) {
       const remaining = Math.round((this.timer.targetTime - Date.now()) / 1000);
       if (remaining > 0) {
-        this.start();
+        this.start(true);
       } else {
         this.timer.remaining = 0;
         this.reset();
@@ -53,7 +84,43 @@ export class StudyTimer {
 
     if (this.timer.mode === 'rest') {
       this.restBtn.classList.add('active');
-      this.studyBtn.classList.remove('active');
+    } else {
+        // Find button matching remaining time if possible
+        const mins = Math.floor(this.timer.remaining / 60);
+        this.durationBtns.forEach(b => {
+            if (parseInt(b.dataset.minutes) === mins) b.classList.add('active');
+        });
+    }
+  }
+
+  setActiveDuration(activeBtn) {
+    this.durationBtns.forEach(btn => btn.classList.remove('active'));
+    activeBtn.classList.add('active');
+  }
+
+  handleSyncAction(action) {
+    if (action === 'start') {
+        this.start(true);
+    } else if (action === 'pause') {
+        this.pause(true);
+    } else if (action === 'reset' || action === 'duration_change' || action === 'mode_change') {
+        this.pause(true);
+        this.updateDisplay();
+        this.updateModeUI();
+    }
+  }
+
+  updateModeUI() {
+    if (this.timer.mode === 'rest') {
+        this.restBtn.classList.add('active');
+        this.durationBtns.forEach(b => b.classList.remove('active'));
+    } else {
+        this.restBtn.classList.remove('active');
+        const mins = Math.floor(this.timer.remaining / 60);
+        this.durationBtns.forEach(b => {
+            if (parseInt(b.dataset.minutes) === mins) b.classList.add('active');
+            else b.classList.remove('active');
+        });
     }
   }
 
@@ -71,29 +138,41 @@ export class StudyTimer {
     }
   }
 
-  start() {
+  start(isSync = false) {
     if (this.timer.running && this.timer.interval) return;
     this.timer.running = true;
-    this.timer.targetTime = Date.now() + (this.timer.remaining * 1000);
+    if (!isSync) {
+        this.timer.targetTime = Date.now() + (this.timer.remaining * 1000);
+    }
     this.toggleBtn.textContent = '⏸';
-    this.stateManager.save();
+    if (!isSync) this.stateManager.save();
+    
+    clearInterval(this.timer.interval);
     this.timer.interval = setInterval(() => this.updateDisplay(), 1000);
   }
 
-  pause() {
+  pause(isSync = false) {
     this.timer.running = false;
     clearInterval(this.timer.interval);
     this.timer.interval = null;
-    this.timer.targetTime = null;
+    if (!isSync) {
+        this.timer.targetTime = null;
+    }
     this.toggleBtn.textContent = '▶';
+    if (!isSync) this.stateManager.save();
+  }
+
+  reset(keepDuration = false) {
+    this.pause();
+    if (!keepDuration) {
+        this.timer.remaining = this.timer.mode === 'study' ? 1500 : 300;
+    }
+    this.updateDisplay();
     this.stateManager.save();
   }
 
-  reset() {
-    this.pause();
-    this.timer.remaining = this.timer.mode === 'study' ? 1500 : 300;
-    this.updateDisplay();
-    this.stateManager.save();
+  broadcast(type, action) {
+    this.channel.postMessage({ type, action, timer: this.timer });
   }
 
   stopAndNotify() {
@@ -104,9 +183,14 @@ export class StudyTimer {
     this.toggleBtn.textContent = '▶';
     this.updateDisplay();
     this.stateManager.save();
-    setTimeout(() => {
-      alert(this.timer.mode === 'study' ? "Study session over! Time for a rest." : "Rest over! Ready to focus?");
-      this.reset();
-    }, 100);
+    
+    // Only notify if tab is active to avoid multiple alerts
+    if (!document.hidden) {
+        setTimeout(() => {
+          alert(this.timer.mode === 'study' ? "Study session over! Time for a rest." : "Rest over! Ready to focus?");
+          this.reset();
+          this.broadcast('SYNC', 'reset');
+        }, 100);
+    }
   }
 }
